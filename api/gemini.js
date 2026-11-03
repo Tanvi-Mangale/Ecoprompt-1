@@ -5,7 +5,7 @@
 const IS_PROD = Boolean(process.env.VERCEL);
 
 const MAX_PROMPT_CHARS = 4000;
-const MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash')
+const MODEL = (process.env.GEMINI_MODEL || 'gemini-3.8-flash')
   .trim()
   .replace(/^models\//, '');
 
