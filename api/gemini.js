@@ -3,8 +3,11 @@
 
 const clean = (m) => String(m).trim().replace(/^models\//, '');
 // Tried in order. If one is unavailable or overloaded, the next one is used.
-const MODELS = [...new Set([process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'].filter(Boolean).map(clean))];
-const IS_PROD = Boolean(process.env.VERCEL);
+const MODELS = [
+  process.env.GEMINI_MODEL,
+  'gemini-2.5-flash'
+].filter(Boolean);
+
 const MAX_PROMPT_CHARS = 4000;
 // Temporary problems: not found, quota, overloaded. Try another model / retry.
 const RETRYABLE = new Set([404, 429, 500, 503, 504]);
@@ -45,7 +48,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+const rawApiKey =
+  process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+
+const apiKey = String(rawApiKey)
+  .trim()
+  .replace(/^GEMINI_API_KEY\s*=\s*/i, '')
+  .replace(/^["']|["']$/g, '');
+
+if (!apiKey || /[\r\n]/.test(apiKey) || /\s/.test(apiKey)) {
+  return res.status(500).json({
+    error: 'Invalid Gemini API key configuration. Check Vercel Environment Variables.'
+  });
+}
   if (!apiKey) {
     return res.status(500).json({
       error:
